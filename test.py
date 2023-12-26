@@ -1,78 +1,166 @@
+
+# очистка экрана после отрисовки доски
 import os
+import random
 clear = lambda: os.system('cls')
 
 
-
-board = [[' ' for i in range (0,3)] for j in range(0,3)]
-
-# player = "X"
+# создаю с помощью генератора строк матрицу 3X3
+board = [['-' for i in range (0,3)] for j in range(0,3)]
 
 
 #функция отрисовки доски
+# =================
 def draw_board(board): 
-    clear()
+    # очищаю экран каждый раз при вызове функции отрисовки
+    clear() 
+    # отрисовываю верXнюю границу доски и ось У
     print("    0   1   2")
     print("  -------------")
     
+    # в треX шагаX отрисовываю созданную матрицу и вместе с тем отрисовываю нижнюю границу для каждой итерации
     for i in range(0,3):
-        print(f'{i} | {board[i][0]} | {board[i][1]} | {board[i][2]} |')# В трех шагах отрисовываю матрицу
+        print(f'{i} | {board[i][0]} | {board[i][1]} | {board[i][2]} |')
         print("  -------------")
     print()
 
+
 #функция проверки победителя
+# ===========================
+# проверяю на все возможные комбинации для победы, если хоть одно верно возвращаю True
 def win_condition(board, player):
+    if any([
+        all([board[0][0] == player, board[0][1] == player, board[0][2] == player]),
+        all([board[1][0] == player, board[1][1] == player, board[1][2] == player]),
+        all([board[2][0] == player, board[2][1] == player, board[2][2] == player]),
+        all([board[0][0] == player, board[1][0] == player, board[2][0] == player]),
+        all([board[0][1] == player, board[1][1] == player, board[2][1] == player]),
+        all([board[0][2] == player, board[1][2] == player, board[2][2] == player]),
+        all([board[0][0] == player, board[1][1] == player, board[2][2] == player]),
+        all([board[0][2] == player, board[1][1] == player, board[2][0] == player]),
+    ]):
+        return True
+    else:
+        return False
+
+
+# функция проверки на ничью
+def draw_condition(board):
+    for i in board:
+        if ' ' not in i:
+            return True
     return False
 
-#функция хода игрока
-def player_move(board, X, Y, player):
-    
+# функция очистки доски
+def clear_board(board):
+    for i in range(0,3):
+        for j in range(0,3):
+                board[i][j] = ' '
+
+#функция Xода игрока
+# =================
+# в функцию Xода игрока передаю переменную с тем какой игрок сейчас Xодит(X/O) 
+# так же передаю координаты и доску на которой нужно сделать пометку
+def player_move(board, X, Y, player,):
+    # если игрок сейас X то:
     if player == 'X':
+        # отрисовываю символ который Xранится в player по заданным координатам
         board[X][Y] = player
-        player = 'O'
+    # аналогично тому что выше
     elif player == 'O':
         board[X][Y] = player
-        player = 'X'
 
+    # отрисовываю доску с пометкой Xода игрока
     draw_board(board)
-    return player
 
 
-def game_function():
-
-    
-
+# функция процесса игры.
+# =============================
+# содержит в себе все функции написанные выше, соединяет части воедино
+def game_function(board):
+    # цикл запуска игры, игра будет продолжаться пока while == True
+    # //после проверки победителя если игрок победил то цикл повторится и пропросит ввести значение снова
     while True:
-        if(input('Хотите сыграть? (Y/N)') == 'N'):
-            break
+        if(input('Хотите сыграть? (y/n)') == 'n'):
+            # если n то игра окончена и цикл прерывается
+            break 
         else:
-
+            # если нет то основная логика игры:
+            # =================================
+            # очищаю доску на случай если это не первая игра
+            clear_board(board)
+            # присваиваю переменной player значение X каждый раз когда цикл с игрой повторяется
             player = 'X'
-
+            # переменная хранящая результат функции условий победы
+            win = False
+            # переменная хранящая условия ничьей
+            draw = False
+            # переменная хранящая выбор игры против Генератора рандомных чисел
+            pve = False
+            # отрисовываю поле до того как игрок успел сделать Xод для визуализации доски
             draw_board(board)
 
-            # место для пве логики
-
+            # если игрок хочет сыграть с Генератором рандомных чисел то записываю в пве True
+            if(input('сыграть против Генератора рандомных чисел?') == 'y'):
+                pve = True
             
-
+            # основной цикл повторения Xода игрока до теX пор пока не будen прерван
+            print('"Ctrl + C" чтобы закончить игру досрочно')
             while True:
+                # обозначаю чей сейчас Xод с помощью player
+                print(f'сейчас Ходят "{player}"')
+                if pve:
+                    if player == 'X':
+                        # через ввод получаю две координаты
+                        x, y = int(input('X ')), int(input('Y '))
+                    elif player == 'O':
+                        # рандомно получаю координаты
+                        x, y = random.randint(0,2), random.randint(0,2)
+                else:
+                # через ввод получаю две координаты
+                    x, y = int(input('X ')), int(input('Y '))
 
-                if win_condition(board, player):
-                    break
                 
-                print(f'сейчас ходят "{player}"')
-
-                x, y = int(input('X ')), int(input('Y '))
-                
-
+                # проверяю чтобы координаты были в диапазоне от 0 до 2
                 if all([0<=x<=2, 0<=y<=2]):
                     if board[x][y] == 'X' or board[x][y] == 'O':
-                        print('Клетка уже занята!')
+                        # если Генератор рандомных чисел промахивается то не печатаю в консоль сообщение об этом
+                        if player == 'X':
+                            print('Клетка уже занята!')
                     else:
-                        player = player_move(board, x, y, player)
+                        # если все условия соблюдены:
+                        # помечаю клетку символом игрока
+                        player_move(board, x, y, player)
+
+                        # проверяю условия победы и записываю результат в переменную
+                        win = win_condition(board, player)
+                        # если условия соблюдены прерываю цикл с ходом
+                        if win:
+                            break
+
+                        # то же самое делаю для проверки ничьей
+                        draw = draw_condition(board)
+
+                        if draw:
+                            break
+                        # иначе меняю текущего игрока
+                        else:
+                            if player == 'X':
+                                player = 'O'
+                            elif player == 'O':
+                                player = 'X'
                 else:
                     print('Одно из чисел вне границы сетки')
 
-        print(f'Игра окончена, победитель - {player}')
+        # когда условия победы соблюдены цикл с Ходом игрока прерывается, цикл запуска игры снова повторяется
+        # на экран выводится сообщение о победителе
+        if draw:
+            print('Ничья')
+        else:
+            print(f'Игра окончена, победитель - {player}')
 
 
-game_function()
+# вызов функции игры
+game_function(board)
+        
+        
