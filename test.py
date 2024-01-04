@@ -141,13 +141,10 @@ def game_function(board):
                         # то же самое делаю для проверки ничьей
                         draw = draw_condition(board)
 
-                        if draw:
-                            break
-                        # иначе меняю текущего игрока
-                        else:
-                            if player == 'X':
+                       
+                        if player == 'X':
                                 player = 'O'
-                            elif player == 'O':
+                        elif player == 'O':
                                 player = 'X'
                 else:
                     print('Одно из чисел вне границы сетки')
