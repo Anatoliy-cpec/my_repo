@@ -36,11 +36,11 @@ class NotInt(MyException):
 
 class OccupiedPoint(MyException):
     def __str__(self) -> str:
-        return f"(Point is occupied)"
+        return f"(Точка занята)"
 
 
 class Player:
-    def __init__(self, ship_count: List[int] = [3, 2, 2, 1, 1, 1]) -> None:
+    def __init__(self, ship_count: List[int] = [3, 2, 1]) -> None:
         self.ships: List[Ship] = []
         self.ship_points: List[Point] = []
         self.ship_count: List[int] = ship_count
@@ -50,9 +50,7 @@ class Player:
 
 
     def extract_ship_points(self) -> None:
-        
         self.ship_points: List[Point] = []
-
         for ship in self.ships:
             for point in ship.points:
                 self.ship_points.append(point)
@@ -60,25 +58,67 @@ class Player:
 
 
 class AI(Player):
-    def __init__(self, ship_count: List[int] = [3, 2, 2, 1, 1, 1]) -> None:
+    def __init__(self, ship_count: List[int] = [3, 2, 1]) -> None:
         super().__init__(ship_count)
-    def shoot(self) -> Any:
-        pass
+    
+    def shoot(self, enemy: "Board") -> Any:
+        # print('Ваша очередь ходить')
+        # _x: int = int(input("X: "))
+        # _y: int = int(input("Y: "))
+        # _p : "Point" = Point(_x-1,_y-1)
+        ...
 
 
 class User(Player):
-    def __init__(self, ship_count: List[int] = [3, 2, 2, 1, 1, 1]) -> None:
+    def __init__(self, ship_count: List[int] = [3, 2, 1]) -> None:
         super().__init__(ship_count)
-    def shoot(self) -> Any:
-        pass
+    def shoot(self, enemy: "Board") -> Any:
+        try:
+            _exit: bool = False
+            while not _exit:
+                print('Ваша очередь ходить')
+                _x: int = int(input("X↓: "))
+                _y: int = int(input("Y→: "))
+
+                if (_x < 1 or _x > 6) or (_y < 1 or _y > 6):
+                                raise OutOfRange
+
+                _p : "Point" = Point(_x-1,_y-1)
+
+                if _p in enemy.shooted_points:
+                    raise OccupiedPoint
+                else:
+                    enemy.add_hitted_point(_p)
+
+                    for ship in enemy.__player.ships:
+                        for point in ship.points:
+                            if point == _p:
+                                ship.decrease_health
+                                ship.hited_points.append(_p)
+
+
+
+
+
+        except Exception as e:
+            print(e)
 
 
 class Ship:
     def __init__(self, size: int, points: "Point", hp: int) -> None:
         self.__size: int = size
         self.points: "Point" = points
-        self.hited_points: List[Point]
+        self.hited_points: List[Point] = []
         self.__hp: int = hp
+        self.destroyed: bool = False
+
+    @property   
+    def decrease_health(self):
+        self.__hp -= 1
+        if self.__hp <= 0:
+            self.destroyed = True
+
+        
 
 
 class Board:
@@ -88,12 +128,20 @@ class Board:
         self.__field: List[List[str]] = [
             ["o" for i in range(self.__size)] for j in range(self.__size)
         ]
+
+        self.shooted_points: List[Point] = []
+
+    def add_hitted_point(self, point: "Point"):
+        self.shooted_points.append(Point(point.x, point.y))
     
-    def point_is_valid(self, point: Point) -> bool:
+    def point_is_valid(self, point: Point,) -> bool:
         
         _points = [Point(point.x-1, point.y-1),Point(point.x-1, point.y),Point(point.x-1, point.y+1),
                     Point(point.x, point.y-1),Point(point.x, point.y),Point(point.x, point.y+1),
                     Point(point.x+1, point.y-1),Point(point.x+1, point.y),Point(point.x+1, point.y+1),]
+        
+        if any([point.x > 5 or point.x < 0, point.y > 5 or point.y < 0]):
+            return False
 
         for i in self.__player.ship_points:
             if i in _points:
@@ -104,11 +152,15 @@ class Board:
     def create_ship(self, ship_size: int) -> Ship:
         _exit: bool = False
         while not _exit:
+
+
+
+            
             try:
                 
                 if type(self.__player) is type(AI()):
                     
-                    _allign: str = random.choice(['h','v'])
+                    _allign: str = random.choice('hv')
 
                     _x: int = random.randint(1,6)
                     _y: int = random.randint(1,6)
@@ -129,19 +181,23 @@ class Board:
                                 _points.append(Point(_p.x+i, _p.y))
                             else:
                                 raise 
-
                 else:
-                    
-                    _allign: str = input("Ориентация корабля: h/v") 
-                    if 'h' in _allign:
-                        _allign = 'h'
-                    elif 'v' in _allign:
-                        _allign = 'v'
-                    else:
-                        raise NotAllign
 
-                    _x: int = int(input("X: "))
-                    _y: int = int(input("Y: "))
+                    print(f'Сейчас {ship_size} палубный корабль')
+
+                    if ship_size > 1:
+                        _allign: str = input("Ориентация корабля: h/v") 
+                        if 'h' in _allign:
+                            _allign = 'h'
+                        elif 'v' in _allign:
+                            _allign = 'v'
+                        else:
+                            raise NotAllign
+                    else: 
+                        _allign = 'h'
+
+                    _x: int = int(input("X↓: "))
+                    _y: int = int(input("Y→: "))
 
                     _p : "Point" = Point(_x-1,_y-1)
                     _points: List[Point] = []
@@ -164,7 +220,8 @@ class Board:
                                 raise NotValid
 
             except Exception as e:
-                print(e)
+                if (type(self.__player) is type(User())):
+                    print(e)
 
             else:
                 _exit = True
@@ -174,26 +231,65 @@ class Board:
             
 
     def create_ships(self) -> None:
-        for ship_size in self.__player.ship_count:
-            self.__player.add_ship(self.create_ship(ship_size))
-            self.__player.extract_ship_points()
+        if type(self.__player) is type(User()):
+            for ship_size in self.__player.ship_count:
+                self.__player.add_ship(self.create_ship(ship_size))
+                self.__player.extract_ship_points()
+                self.drow_board
+        elif type(self.__player) is type(AI()):
+            for ship_size in self.__player.ship_count:
+                self.__player.add_ship(self.create_ship(ship_size))
+                self.__player.extract_ship_points()
             self.drow_board
 
-    def add_ships_to_board(self) -> None:
-        pass
+    def drow_points(self) -> None:
+
+        if type(self.__player) is type(User()):
+            # выстрелы
+            if not len(self.shooted_points) == 0:
+                for point in self.shooted_points:
+                    self.__field[point.x][point.y] = '⁐'
+            # корабли
+            for ship in self.__player.ships:
+                if ship.destroyed:
+                    for point in ship.points:
+                        self.__field[point.x][point.y] = '✖'
+                elif not len(ship.hited_points) == 0:
+                    for point in ship.points:
+                        if point in ship.hited_points:
+                            self.__field[point.x][point.y] = '•'
+                        else:
+                             self.__field[point.x][point.y] = '■'
+                else:
+                    for point in ship.points:
+                        self.__field[point.x][point.y] = '■'
+
+
+        if type(self.__player) is type(AI()):
+            # выстрелы
+            if not len(self.shooted_points) == 0:
+                for point in self.shooted_points:
+                    self.__field[point.x][point.y] = '⁐'
+
+            for ship in self.__player.ships:
+                if ship.destroyed:
+                    for point in ship.points:
+                        self.__field[point.x][point.y] = '✖'
+                elif not len(ship.hited_points) == 0:
+                    for point in ship.hited_points:
+                        self.__field[point.x][point.y] = '•'
+                        
+
 
     @property
     def drow_board(self) -> None:
-
-        print(self.__player.ship_points)
 
         self.__field: List[List[str]] = [
             ["o" for i in range(self.__size)] for j in range(self.__size)
         ]
 
-        for point in self.__player.ship_points:
-            self.__field[point.x][point.y] = '■'
-
+        self.drow_points()
+        
 
         print()
         _str: str = "__|"
@@ -210,9 +306,10 @@ class Board:
 
 
 
-p1: AI = AI([3,1])
+p1: User = User([3, 2, 1])
 
 b1: Board = Board(6, p1)
+b1.drow_board
 b1.create_ships()
 
 
